@@ -1,76 +1,175 @@
-Deepfake Detection using CNNs
-Đồ án môn học: Xây dựng mô hình CNN phát hiện ảnh giả mạo (Real vs. AI-generated)
+# 🧠 Deepfake Detection using Convolutional Neural Networks (CNNs)
 
-👤 Thông tin sinh viên
-Họ và tên: Nguyễn Đức Thịnh
+[![Python](https://img.shields.io/badge/Python-3.9-blue?logo=python&logoColor=white)]()
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red?logo=pytorch&logoColor=white)]()
+[![Status](https://img.shields.io/badge/Status-Course%20Project-green)]()
+[![License](https://img.shields.io/badge/License-Educational-lightgrey)]()
 
-MSSV: 23110156
+> **Đồ án môn học Công nghệ Thông tin – Xây dựng mô hình CNN phát hiện ảnh giả mạo (Deepfake / AI-generated)**
 
-Trường: Đại học Sư phạm Kỹ thuật TP.HCM (HCMUTE)
+---
 
-Giảng viên hướng dẫn: TS. Lê Văn Vinh
+## 👤 Thông tin chung
 
-📖 Giới thiệu
-Dự án này xây dựng một mô hình Convolutional Neural Network (CNN) thủ công (không sử dụng pre-trained models) để phân loại hình ảnh thành hai nhóm:
+- **Sinh viên thực hiện:** Nguyễn Đức Thịnh  
+- **Trường:** Đại học Sư phạm Kỹ thuật TP.HCM (HCMUTE)  
+- **Giảng viên hướng dẫn:** TS. Lê Văn Vinh  
+- **Môn học:** Công nghệ Thông tin  
 
-REAL: Ảnh thật.
+---
 
-FAKE: Ảnh do AI tạo ra (Deepfake).
+## 📌 Giới thiệu (Introduction)
 
-Mô hình được huấn luyện trên bộ dữ liệu CIFAKE và đạt độ chính xác khoảng 94%.
+Dự án này tập trung vào việc **nghiên cứu và xây dựng một mô hình Convolutional Neural Network (CNN) thủ công** nhằm phát hiện sự khác biệt giữa:
 
-📂 Dữ liệu (Dataset)
-Dự án sử dụng dataset từ Kaggle: CIFAKE: Real and AI-Generated Synthetic Images.
+- ✅ **REAL** – Ảnh thật
+- ❌ **FAKE** – Ảnh được sinh ra bởi AI (Deepfake / Synthetic Image)
 
-Training: 100,000 ảnh.
+Mô hình được xây dựng bằng **PyTorch**, huấn luyện và đánh giá trên bộ dữ liệu **CIFAKE**, đạt được:
 
-Testing: 20,000 ảnh.
+- 🎯 **Test Accuracy ≈ 94% sau 10 epochs**
+- Học ổn định, giảm overfitting nhờ BatchNorm & Dropout
 
-Kích thước: 32x32 (được resize lên 224x224 trong quá trình huấn luyện).
+---
 
-🧠 Kiến trúc Mô hình
-Mô hình MyNet được thiết kế với 4 khối tích chập (Convolutional Blocks):
+## 📂 Dataset
 
-Input: 3x224x224
+- **Tên dataset:** CIFAKE – Real and AI-Generated Synthetic Images  
+- **Nguồn:** Kaggle  
+  👉 https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images  
 
-Layers: 4 lớp Conv2d (tăng dần channels: 32 -> 64 -> 128 -> 256), mỗi lớp đi kèm BatchNorm, ReLU và MaxPool.
+### 📊 Thông tin chi tiết
+| Thành phần | Số lượng |
+|-----------|----------|
+| Training images | 100,000 |
+| Testing images | 20,000 |
+| Số lớp | 2 (REAL / FAKE) |
+| Kích thước ảnh | 224 × 224 (resize trong code) |
 
-Classifier: Lớp Fully Connected (Linear) đầu ra 2 lớp (Real/Fake) có sử dụng Dropout (0.5) để chống overfitting.
+---
 
-🛠 Cài đặt & Hướng dẫn sử dụng
-1. Yêu cầu hệ thống
-Python 3.x
+## 🛠️ Công nghệ sử dụng (Tech Stack)
 
-Thư viện: torch, torchvision, matplotlib, kaggle
+- **Ngôn ngữ:** Python
+- **Deep Learning Framework:** PyTorch
+- **Môi trường:** Google Colab (GPU NVIDIA T4)
 
-Bash
+### 🔧 Kỹ thuật chính
+- Data Augmentation:
+  - RandomHorizontalFlip
+  - RandomRotation
+  - ColorJitter
+- Custom CNN Architecture
+- Batch Normalization
+- Dropout chống overfitting
+- SGD Optimizer với Momentum
+
+---
+
+## 🧠 Kiến trúc mô hình (Model Architecture)
+
+Mô hình **MyNet** gồm 4 khối tích chập (Conv Blocks):
+
+Input Image (3 x 224 x 224)
+│
+├── Conv Block 1: Conv2d (3 → 32) → BatchNorm → ReLU → MaxPool
+├── Conv Block 2: Conv2d (32 → 64) → BatchNorm → ReLU → MaxPool
+├── Conv Block 3: Conv2d (64 → 128) → BatchNorm → ReLU → MaxPool
+├── Conv Block 4: Conv2d (128 → 256) → BatchNorm → ReLU → MaxPool
+│
+├── Flatten
+├── Linear (512) → ReLU → Dropout (0.5)
+└── Linear (2 classes: REAL / FAKE)
+
+
+### ⚙️ Cấu hình huấn luyện
+- **Loss Function:** CrossEntropyLoss  
+- **Optimizer:** SGD  
+  - Learning rate = 0.001  
+  - Momentum = 0.9  
+- **Epochs:** 10  
+
+---
+
+## 🚀 Hướng dẫn chạy (How to Run)
+
+### 1️⃣ Cài đặt thư viện
 
 pip install torch torchvision matplotlib kaggle
-2. Tải dữ liệu
-Dự án được cấu hình để chạy trên Google Colab và tải dữ liệu trực tiếp từ Kaggle API.
 
-Tạo API Token trên Kaggle (kaggle.json).
+### 2️⃣ Chuẩn bị Kaggle API
 
-Upload file kaggle.json khi chạy notebook.
+Dự án chạy tốt nhất trên Google Colab và tải dataset tự động từ Kaggle.
 
-3. Chạy dự án
-Mở file notebook CNNs_Deepfake_Detection.ipynb và chạy lần lượt các cell để:
+Các bước:
 
-Tải dữ liệu.
+Đăng nhập Kaggle → Account → Settings
 
-Huấn luyện mô hình (Training).
+Chọn Create New Token
 
-Đánh giá kết quả (Evaluation).
+Tải file kaggle.json
 
-Kiểm tra thử trên ảnh ngẫu nhiên (Inference).
+Upload file này khi notebook yêu cầu
 
-📊 Kết quả
+### 3️⃣ Training & Testing
+
+Mở file notebook:
+
+CNNs_Deepfake_Detection.ipynb
+
+
+Chạy lần lượt các bước:
+
+Tải & giải nén dataset
+
+Preprocessing & DataLoader
+
+Khởi tạo mô hình CNN
+
+Training loop
+
+Evaluation & Visualization
+
+## 📊 Kết quả (Results)
+
 Sau 10 epochs huấn luyện:
 
-Training Loss: ~0.17
+Chỉ số	Giá trị
+Training Loss	~0.17
+Test Accuracy	~94.6%
+Overfitting	Thấp
 
-Test Accuracy: ~94.6%
+📈 Biểu đồ Loss & Accuracy được sinh tự động trong notebook sau khi training.
 
-Biểu đồ Loss và Accuracy sẽ được hiển thị trực tiếp trong notebook sau khi quá trình huấn luyện hoàn tất.
+## 🧪 Nhận xét & Hạn chế
 
-Dự án phục vụ mục đích học tập và nghiên cứu.
+### ✅ Ưu điểm:
+
+Kiến trúc CNN tự xây dựng, dễ hiểu
+
+Accuracy cao với dataset lớn
+
+Huấn luyện ổn định
+
+### ⚠️ Hạn chế:
+
+Chỉ sử dụng CNN cơ bản
+
+Chưa khai thác đặc trưng miền tần số (FFT/DCT)
+
+Chưa so sánh với các mô hình SOTA (Xception, EfficientNet, ViT)
+
+### 🔮 Hướng phát triển
+
+So sánh CNN với Transfer Learning (ResNet, EfficientNet)
+
+Áp dụng Frequency Domain Analysis (FFT / F3Net)
+
+Thử nghiệm video deepfake (FaceForensics++)
+
+Triển khai Web demo (Streamlit / Flask)
+
+### 📝 License
+
+Dự án được thực hiện phục vụ mục đích học tập và nghiên cứu,
+không sử dụng cho mục đích thương mại.
