@@ -31,6 +31,9 @@ from ai_logic import DeepfakeAI
 # MODEL AUTO-DOWNLOAD (for Cloud Deployment)
 # =============================================================================
 
+# Google Drive File ID for the model
+GOOGLE_DRIVE_FILE_ID = "1a0kszqbVthsrEnCSV8mzk4vrupSUmDeB"
+
 def download_model_if_not_exists(model_path: str) -> bool:
     """
     Check if model file exists. If not, download from MODEL_DOWNLOAD_URL.
@@ -42,12 +45,13 @@ def download_model_if_not_exists(model_path: str) -> bool:
         print(f"✅ Model file found: {model_path}")
         return True
     
+    # Try environment variable first, fallback to hardcoded Google Drive ID
     model_url = os.environ.get("MODEL_DOWNLOAD_URL")
     
     if not model_url:
-        print("❌ Model file not found and MODEL_DOWNLOAD_URL not set.")
-        print("   Please set MODEL_DOWNLOAD_URL environment variable.")
-        return False
+        # Use hardcoded Google Drive file ID as fallback
+        model_url = f"https://drive.google.com/file/d/{GOOGLE_DRIVE_FILE_ID}/view"
+        print(f"📥 Using default Google Drive model (ID: {GOOGLE_DRIVE_FILE_ID})")
     
     print(f"📥 Model not found locally. Downloading from: {model_url}")
     

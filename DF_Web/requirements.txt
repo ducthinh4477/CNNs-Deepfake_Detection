@@ -20,3 +20,5 @@ gunicorn
 
 # Python multipart (for file uploads)
 python-multipart
+
+requests
