@@ -13,7 +13,8 @@ import io
 import base64
 import uuid
 import tempfile
-from typing import Optional
+import requests
+from typing import Optional, List
 from datetime import datetime
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -24,6 +25,68 @@ from PIL import Image
 import numpy as np
 
 from ai_logic import DeepfakeAI
+
+
+# =============================================================================
+# MODEL AUTO-DOWNLOAD (for Cloud Deployment)
+# =============================================================================
+
+def download_model_if_not_exists(model_path: str) -> bool:
+    """
+    Check if model file exists. If not, download from MODEL_DOWNLOAD_URL.
+    
+    Returns:
+        True if model exists or was downloaded successfully, False otherwise.
+    """
+    if os.path.exists(model_path):
+        print(f"✅ Model file found: {model_path}")
+        return True
+    
+    model_url = os.environ.get("MODEL_DOWNLOAD_URL")
+    
+    if not model_url:
+        print("❌ Model file not found and MODEL_DOWNLOAD_URL not set.")
+        print("   Please set MODEL_DOWNLOAD_URL environment variable.")
+        return False
+    
+    print(f"📥 Model not found locally. Downloading from: {model_url}")
+    
+    try:
+        # For Google Drive links, convert to direct download URL
+        if "drive.google.com" in model_url:
+            # Extract file ID from Google Drive URL
+            if "/file/d/" in model_url:
+                file_id = model_url.split("/file/d/")[1].split("/")[0]
+                model_url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t"
+        
+        response = requests.get(model_url, stream=True, timeout=300)
+        response.raise_for_status()
+        
+        # Get total file size for progress
+        total_size = int(response.headers.get('content-length', 0))
+        downloaded_size = 0
+        
+        with open(model_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    downloaded_size += len(chunk)
+                    if total_size > 0:
+                        progress = (downloaded_size / total_size) * 100
+                        print(f"   Progress: {progress:.1f}%", end='\r')
+        
+        print(f"\n✅ Model downloaded successfully: {model_path}")
+        return True
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Failed to download model: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Unexpected error downloading model: {e}")
+        # Clean up partial download
+        if os.path.exists(model_path):
+            os.remove(model_path)
+        return False
 
 
 # =============================================================================
@@ -38,11 +101,38 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS Configuration - Allow requests from Next.js frontend
+# =============================================================================
+# CORS Configuration - Secure origins for production
+# =============================================================================
+
+def get_allowed_origins() -> List[str]:
+    """
+    Get allowed CORS origins from environment variable.
+    FRONTEND_URL can be a single URL or comma-separated list.
+    Falls back to '*' for development/testing.
+    """
+    frontend_url = os.environ.get("FRONTEND_URL", "*")
+    
+    if frontend_url == "*":
+        return ["*"]
+    
+    # Support comma-separated URLs
+    origins = [url.strip() for url in frontend_url.split(",")]
+    
+    # Always include localhost for development
+    dev_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    
+    return list(set(origins + dev_origins))
+
+allowed_origins = get_allowed_origins()
+print(f"🌐 CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,11 +152,19 @@ async def startup_event():
     """Initialize AI model on server startup"""
     global ai_engine
     print("🚀 Initializing DeepScan AI Engine...")
+    
+    # Step 1: Ensure model file exists (download if necessary)
+    if not download_model_if_not_exists(MODEL_PATH):
+        print("⚠️ Model not available. API will run in degraded mode.")
+        ai_engine = None
+        return
+    
+    # Step 2: Load the model
     try:
         ai_engine = DeepfakeAI(model_path=MODEL_PATH)
-        print(f"Model loaded successfully on device: {ai_engine.device}")
+        print(f"✅ Model loaded successfully on device: {ai_engine.device}")
     except Exception as e:
-        print(f"Failed to load model: {e}")
+        print(f"❌ Failed to load model: {e}")
         ai_engine = None
 
 

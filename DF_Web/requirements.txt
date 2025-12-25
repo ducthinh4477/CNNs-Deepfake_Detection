@@ -1,6 +1,22 @@
-streamlit
+# Core API Framework
+fastapi
+uvicorn[standard]
+
+# AI/ML Dependencies
 torch
 torchvision
 pillow
 numpy
 opencv-python
+
+# HTTP Requests (for model download)
+requests
+
+# Optional: Streamlit (for standalone UI)
+streamlit
+
+# Production server
+gunicorn
+
+# Python multipart (for file uploads)
+python-multipart

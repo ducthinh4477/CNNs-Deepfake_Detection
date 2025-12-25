@@ -19,7 +19,8 @@ import {
   Zap
 } from 'lucide-react';
 
-const API_BASE = 'http://127.0.0.1:8000';
+// API Base URL: Uses environment variable in production, localhost in development
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 // Model info constant (synced with backend)
 const MODEL_INFO = {
