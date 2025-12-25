@@ -1,0 +1,285 @@
+# ============================================================================
+# DeepScan - Deepfake Detection System
+# Comprehensive .gitignore for Python/FastAPI + Next.js/Node.js + Deep Learning
+# ============================================================================
+
+# ============================================================================
+# PYTHON / FASTAPI BACKEND (DF_Web/)
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env.local
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Pylint
+.pylint.d/
+
+# ============================================================================
+# NODE.JS / NEXT.JS FRONTEND (frontend/)
+# ============================================================================
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Production build
+dist/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+coverage/
+.nyc_output/
+
+# Package manager locks (uncomment if you want to ignore)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================================================
+# DEEP LEARNING / AI MODEL FILES
+# ============================================================================
+
+# PyTorch model files (large binary files)
+*.pth
+*.pt
+*.ckpt
+
+# TensorFlow / Keras model files
+*.h5
+*.hdf5
+*.pb
+saved_model/
+
+# ONNX models
+*.onnx
+
+# Model checkpoints directory
+checkpoints/
+models/
+weights/
+
+# Training logs
+runs/
+logs/
+tensorboard/
+
+# Dataset files (usually too large for Git)
+data/
+datasets/
+*.csv
+*.json.gz
+
+# ============================================================================
+# ENVIRONMENT VARIABLES
+# ============================================================================
+
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+*.env
+
+# ============================================================================
+# OS-SPECIFIC FILES
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# IDE / EDITOR SPECIFIC
+# ============================================================================
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains (PyCharm, WebStorm)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ============================================================================
+# MISCELLANEOUS
+# ============================================================================
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Log files
+*.log
+logs/
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+
+# Docker
+.docker/
+
+# Local configuration
+local_settings.py
+config.local.js
+
+# Uploaded files (if stored locally during development)
+uploads/
+static/uploads/
+
+# ============================================================================
+# PROJECT-SPECIFIC EXCEPTIONS
+# ============================================================================
+
+# Keep the model config file (small JSON, needed for inference)
+!model_config.json
+
+# Keep requirements.txt
+!requirements.txt
+
+# Keep package.json
+!package.json
