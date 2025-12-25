@@ -1,11 +1,10 @@
-<<<<<<< HEAD
-# 🛡️ DeepScan - AI-Powered Deepfake Detection System
+# 🛡️ DeepScan - Hệ Thống Phát Hiện Deepfake
 
 <div align="center">
 
 ![DeepScan Banner](https://img.shields.io/badge/DeepScan-Deepfake%20Detection-blue?style=for-the-badge&logo=shield)
 
-**Detect AI-generated and manipulated images with confidence using advanced forensic analysis.**
+**Phát hiện ảnh giả mạo và ảnh được tạo bởi AI với độ tin cậy cao sử dụng phân tích pháp y nâng cao.**
 
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -13,211 +12,212 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 
-[Features](#-features) • [Architecture](#-architecture) • [Installation](#-installation) • [Usage](#-usage) • [Forensic Methods](#-forensic-methods)
+[Tính năng](#-tính-năng) • [Kiến trúc](#-kiến-trúc) • [Cài đặt](#-cài-đặt) • [Sử dụng](#-sử-dụng) • [Phương pháp phân tích](#-phương-pháp-phân-tích-pháp-y)
 
 </div>
 
 ---
 
-## 🎯 Overview
+## 🎯 Tổng quan
 
-**DeepScan** is a full-stack deepfake detection application that combines a powerful PyTorch-based CNN model with an intuitive modern web interface. Upload any image and get instant analysis with forensic visualizations to understand *why* an image might be fake.
+**DeepScan** là ứng dụng full-stack phát hiện deepfake kết hợp mô hình CNN mạnh mẽ dựa trên PyTorch với giao diện web hiện đại, trực quan. Upload bất kỳ hình ảnh nào và nhận phân tích tức thì với các công cụ trực quan hóa pháp y để hiểu *tại sao* một hình ảnh có thể là giả mạo.
 
-### ✨ Key Highlights
+### ✨ Điểm nổi bật
 
-- 🧠 **Custom CNN Model** trained on CIFAKE dataset with **94% accuracy**
-- 🔥 **Real-time Analysis** with instant prediction results
-- 🎨 **Forensic Visualizations** including Heatmap (Grad-CAM) and Fourier Analysis
-- ⚡ **Confidence Threshold Slider** for dynamic result interpretation
-- 🌙 **Modern Dark UI** with a professional 3-pane layout
+- 🧠 **Custom CNN Model** được huấn luyện trên dataset CIFAKE với **độ chính xác 94%**
+- 🔥 **Phân tích thời gian thực** với kết quả dự đoán tức thì
+- 🎨 **Trực quan hóa pháp y** bao gồm Heatmap (Grad-CAM) và Fourier Analysis
+- ⚡ **Thanh trượt Confidence Threshold** để điều chỉnh ngưỡng quyết định động
+- 🌙 **Giao diện tối hiện đại** với bố cục 3 cột chuyên nghiệp
 
 ---
 
-## 🖼️ Screenshots
+## 🖼️ Ảnh chụp màn hình
 
 <div align="center">
 
-### Main Interface - 3-Pane Layout
+### Giao diện chính - Bố cục 3 cột
 
-| Upload Panel | Analysis Workspace | Report Panel |
+| Panel Upload | Không gian phân tích | Panel báo cáo |
 |:---:|:---:|:---:|
 | ![Upload](https://via.placeholder.com/250x400/1e293b/60a5fa?text=Upload+Panel) | ![Workspace](https://via.placeholder.com/400x400/1e293b/60a5fa?text=Image+Workspace) | ![Report](https://via.placeholder.com/250x400/1e293b/60a5fa?text=Analysis+Report) |
-| *File upload & model info* | *Original, Heatmap, Fourier views* | *Results & forensic images* |
+| *Upload file & thông tin model* | *Xem ảnh gốc, Heatmap, Fourier* | *Kết quả & ảnh phân tích* |
 
-### Analysis Results
+### Kết quả phân tích
 
-| Authentic Image Detected | Fake Image Detected |
+| Phát hiện ảnh thật | Phát hiện ảnh giả |
 |:---:|:---:|
 | ![Real](https://via.placeholder.com/350x250/1e293b/10b981?text=✓+AUTHENTIC) | ![Fake](https://via.placeholder.com/350x250/1e293b/ef4444?text=✗+LIKELY+FAKE) |
 
 </div>
 
-> 📸 *Replace placeholder images with actual screenshots of your application*
+> 📸 *Thay thế các ảnh placeholder bằng ảnh chụp màn hình thực tế của ứng dụng*
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Kiến trúc
 
-DeepScan uses a modern **3-Pane Layout** designed for professional forensic analysis:
+DeepScan sử dụng **Bố cục 3 cột** hiện đại được thiết kế cho phân tích pháp y chuyên nghiệp:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        DeepScan Application                         │
+│                     Ứng dụng DeepScan                               │
 ├──────────────┬────────────────────────────────┬─────────────────────┤
 │              │                                │                     │
-│   📁 LEFT    │        🖼️ CENTER              │     📊 RIGHT        │
+│   📁 TRÁI    │        🖼️ GIỮA                │     📊 PHẢI         │
 │   SIDEBAR    │        WORKSPACE              │     PANEL           │
 │              │                                │                     │
-│  • Upload    │  • Original Image View        │  • Status Badge     │
-│  • File Info │  • Heatmap Overlay            │  • Confidence Gauge │
-│  • Model     │  • Fourier Analysis           │  • Threshold Slider │
-│    Info      │  • Tab Navigation             │  • Forensic Images  │
-│  • Actions   │                                │  • Details          │
+│  • Upload    │  • Xem ảnh gốc                │  • Badge trạng thái │
+│  • Thông tin │  • Lớp phủ Heatmap            │  • Gauge confidence │
+│    file      │  • Phân tích Fourier          │  • Thanh ngưỡng     │
+│  • Thông tin │  • Điều hướng tab             │  • Ảnh pháp y       │
+│    Model     │                                │  • Chi tiết         │
+│  • Hành động │                                │                     │
 │              │                                │                     │
 └──────────────┴────────────────────────────────┴─────────────────────┘
 ```
 
 ### Tech Stack
 
-| Layer | Technology | Purpose |
+| Tầng | Công nghệ | Mục đích |
 |-------|------------|---------|
-| **Frontend** | Next.js 14 + React | Modern React framework with SSR |
-| **Styling** | Tailwind CSS | Utility-first CSS for dark theme |
-| **Backend** | FastAPI | High-performance Python API |
+| **Frontend** | Next.js 14 + React | Framework React hiện đại với SSR |
+| **Styling** | Tailwind CSS | Utility-first CSS cho giao diện tối |
+| **Backend** | FastAPI | Python API hiệu năng cao |
 | **AI Engine** | PyTorch | Deep learning inference |
-| **Model** | Custom CNN | Trained on CIFAKE dataset |
+| **Model** | Custom CNN | Huấn luyện trên dataset CIFAKE |
 
 ---
 
-## 🚀 Installation
+## 🚀 Cài đặt
 
-### Prerequisites
+### Yêu cầu hệ thống
 
 - Python 3.9+
 - Node.js 18+
 - Git
 
-### 1️⃣ Clone the Repository
+### 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/yourusername/CNNs-Deepfake_Detection.git
 cd CNNs-Deepfake_Detection
 ```
 
-### 2️⃣ Backend Setup (FastAPI)
+### 2️⃣ Cài đặt Backend (FastAPI)
 
 ```bash
-# Navigate to backend directory
+# Di chuyển vào thư mục backend
 cd DF_Web
 
-# Create virtual environment
+# Tạo môi trường ảo
 python -m venv venv
 
-# Activate virtual environment
+# Kích hoạt môi trường ảo
 # Windows:
 venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 
-# Install dependencies
+# Cài đặt dependencies
 pip install -r requirements.txt
 
-# Download the model weights (if not included)
-# Place 'custom_cnn_cifake.pth' in the DF_Web directory
+# Tải trọng số model (nếu chưa có)
+# Đặt file 'custom_cnn_cifake.pth' vào thư mục DF_Web
 
-# Start the FastAPI server
+# Khởi động FastAPI server
 uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-✅ Backend will be running at: `http://127.0.0.1:8000`  
-📚 API Documentation: `http://127.0.0.1:8000/docs`
+✅ Backend sẽ chạy tại: `http://127.0.0.1:8000`  
+📚 Tài liệu API: `http://127.0.0.1:8000/docs`
 
-### 3️⃣ Frontend Setup (Next.js)
+### 3️⃣ Cài đặt Frontend (Next.js)
 
 ```bash
-# Open a new terminal and navigate to frontend
+# Mở terminal mới và di chuyển vào thư mục frontend
 cd frontend
 
-# Install dependencies
+# Cài đặt dependencies
 npm install
 
-# Start the development server
+# Khởi động development server
 npm run dev
 ```
 
-✅ Frontend will be running at: `http://localhost:3000`
+✅ Frontend sẽ chạy tại: `http://localhost:3000`
 
 ---
 
-## 📖 Usage
+## 📖 Sử dụng
 
-1. **Open** the application at `http://localhost:3000`
-2. **Upload** an image using the left sidebar (PNG, JPG up to 10MB)
-3. **Click** "Analyze Image" to run the deepfake detection
-4. **View** results in the right panel:
-   - Status badge (AUTHENTIC / LIKELY FAKE)
-   - Confidence percentage gauge
-   - Risk assessment level
-5. **Adjust** the Confidence Threshold slider to change the decision boundary
-6. **Explore** forensic visualizations:
-   - Switch between Original, Heatmap, and Fourier views
-   - Check the forensic images in the report panel
+1. **Mở** ứng dụng tại `http://localhost:3000`
+2. **Upload** một hình ảnh sử dụng sidebar bên trái (PNG, JPG tối đa 10MB)
+3. **Nhấn** "Analyze Image" để chạy phát hiện deepfake
+4. **Xem** kết quả ở panel bên phải:
+   - Badge trạng thái (AUTHENTIC / LIKELY FAKE)
+   - Gauge phần trăm độ tin cậy
+   - Mức độ đánh giá rủi ro
+5. **Điều chỉnh** thanh trượt Confidence Threshold để thay đổi ngưỡng quyết định
+6. **Khám phá** các công cụ trực quan hóa pháp y:
+   - Chuyển đổi giữa các chế độ xem Original, Heatmap và Fourier
+   - Kiểm tra các ảnh pháp y trong panel báo cáo
 
 ---
 
-## 🔬 Forensic Methods
+## 🔬 Phương pháp Phân tích Pháp y
 
 ### 🔥 Heatmap (Grad-CAM)
 
-**Gradient-weighted Class Activation Mapping** visualizes which regions of the image the CNN focuses on when making its prediction.
+**Gradient-weighted Class Activation Mapping** trực quan hóa những vùng nào của ảnh mà CNN tập trung vào khi đưa ra dự đoán.
 
-| What it shows | How to interpret |
+| Hiển thị gì | Cách diễn giải |
 |---------------|------------------|
-| **Red/Yellow areas** | High activation - model focuses here |
-| **Blue/Green areas** | Low activation - less important for decision |
-| **Concentrated hot spots** | May indicate manipulated regions |
+| **Vùng Đỏ/Vàng** | Kích hoạt cao - model tập trung tại đây |
+| **Vùng Xanh dương/Xanh lá** | Kích hoạt thấp - ít quan trọng cho quyết định |
+| **Điểm nóng tập trung** | Có thể chỉ ra các vùng bị chỉnh sửa |
 
-> 💡 *If heatmap shows unusual concentration on specific areas (eyes, mouth, edges), the image may have localized manipulation.*
+> 💡 *Nếu heatmap hiển thị sự tập trung bất thường ở các khu vực cụ thể (mắt, miệng, cạnh), ảnh có thể bị chỉnh sửa cục bộ.*
 
 ### 📊 Fourier Frequency Analysis
 
-**Fast Fourier Transform (FFT)** converts the image to the frequency domain, revealing patterns invisible to the human eye.
+**Fast Fourier Transform (FFT)** chuyển đổi ảnh sang miền tần số, tiết lộ các mẫu không nhìn thấy được bằng mắt thường.
 
-| What it shows | How to interpret |
+| Hiển thị gì | Cách diễn giải |
 |---------------|------------------|
-| **Center brightness** | Low-frequency components (overall structure) |
-| **Edge patterns** | High-frequency details (textures, edges) |
-| **Grid artifacts** | May indicate GAN-generated images |
-| **Unusual symmetry** | Could suggest synthetic generation |
+| **Độ sáng trung tâm** | Các thành phần tần số thấp (cấu trúc tổng thể) |
+| **Mẫu cạnh** | Chi tiết tần số cao (texture, cạnh) |
+| **Grid artifacts** | Có thể chỉ ra ảnh được tạo bởi GAN |
+| **Đối xứng bất thường** | Có thể gợi ý quá trình tạo tổng hợp |
 
-> 💡 *AI-generated images often have distinctive frequency fingerprints that differ from real photographs.*
+> 💡 *Ảnh được tạo bởi AI thường có dấu vân tay tần số đặc trưng khác với ảnh chụp thật.*
 
 ---
 
-## 📁 Project Structure
+## 📁 Cấu trúc dự án
 
 ```
 CNNs-Deepfake_Detection/
 ├── 📂 DF_Web/                    # Backend (FastAPI)
 │   ├── api.py                    # REST API endpoints
-│   ├── ai_logic.py               # AI engine & forensic methods
-│   ├── model.py                  # CNN architecture definition
-│   ├── custom_cnn_cifake.pth     # Trained model weights
-│   ├── model_config.json         # Model configuration
+│   ├── ai_logic.py               # AI engine & phương pháp pháp y
+│   ├── model.py                  # Định nghĩa kiến trúc CNN
+│   ├── custom_cnn_cifake.pth     # Trọng số model đã huấn luyện
+│   ├── model_config.json         # Cấu hình model
 │   └── requirements.txt          # Python dependencies
 │
 ├── 📂 frontend/                  # Frontend (Next.js)
 │   ├── app/
-│   │   ├── page.jsx              # Main application page
+│   │   ├── page.jsx              # Trang ứng dụng chính
 │   │   ├── layout.js             # Root layout
 │   │   └── globals.css           # Global styles + Tailwind
 │   ├── package.json              # Node.js dependencies
-│   ├── tailwind.config.js        # Tailwind configuration
-│   └── next.config.js            # Next.js configuration
+│   ├── tailwind.config.js        # Cấu hình Tailwind
+│   └── next.config.js            # Cấu hình Next.js
 │
-├── CNNs_Deepfake_Detection.ipynb # Training notebook
+├── CNNs_Deepfake_Detection.ipynb # Notebook huấn luyện
 ├── .gitignore                    # Git ignore rules
-└── README.md                     # This file
+└── README.md                     # File này
 ```
 
 ---
@@ -226,14 +226,14 @@ CNNs-Deepfake_Detection/
 
 ### Endpoints
 
-| Method | Endpoint | Description |
+| Method | Endpoint | Mô tả |
 |--------|----------|-------------|
 | `GET` | `/` | Health check |
-| `GET` | `/health` | Detailed health status |
-| `POST` | `/analyze` | Analyze image with forensic visualizations |
-| `GET` | `/docs` | Swagger API documentation |
+| `GET` | `/health` | Trạng thái health chi tiết |
+| `POST` | `/analyze` | Phân tích ảnh với công cụ trực quan hóa pháp y |
+| `GET` | `/docs` | Tài liệu API Swagger |
 
-### Example Request
+### Ví dụ Request
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/analyze" \
@@ -241,7 +241,7 @@ curl -X POST "http://127.0.0.1:8000/analyze" \
   -F "file=@image.jpg"
 ```
 
-### Example Response
+### Ví dụ Response
 
 ```json
 {
@@ -260,9 +260,9 @@ curl -X POST "http://127.0.0.1:8000/analyze" \
 
 ---
 
-## 🧠 Model Information
+## 🧠 Thông tin Model
 
-| Property | Value |
+| Thuộc tính | Giá trị |
 |----------|-------|
 | **Architecture** | Custom CNN |
 | **Training Dataset** | CIFAKE |
@@ -273,214 +273,37 @@ curl -X POST "http://127.0.0.1:8000/analyze" \
 
 ---
 
-## 🤝 Contributing
+## 🤝 Đóng góp
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Chúng tôi hoan nghênh mọi đóng góp! Vui lòng tạo Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Fork repository
+2. Tạo feature branch (`git checkout -b feature/TinhNangMoi`)
+3. Commit các thay đổi (`git commit -m 'Thêm tính năng mới'`)
+4. Push lên branch (`git push origin feature/TinhNangMoi`)
+5. Mở Pull Request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Dự án này được cấp phép theo MIT License - xem file [LICENSE](LICENSE) để biết chi tiết.
 
 ---
 
-## 🙏 Acknowledgments
+## 🙏 Cảm ơn
 
-- **CIFAKE Dataset** for training data
-- **PyTorch** team for the deep learning framework
-- **FastAPI** for the excellent Python web framework
-- **Vercel** for Next.js and frontend tooling
+- **CIFAKE Dataset** cho dữ liệu huấn luyện
+- **PyTorch** team cho deep learning framework
+- **FastAPI** cho Python web framework xuất sắc
+- **Vercel** cho Next.js và các công cụ frontend
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by HCMUTE Senior Design Team**
+**Được xây dựng với ❤️ bởi Nhóm Đồ án Tốt nghiệp HCMUTE**
 
-⭐ Star this repo if you find it useful! ⭐
+⭐ Star repo này nếu bạn thấy hữu ích! ⭐
 
 </div>
-=======
-# 🧠 Deepfake Detection using Convolutional Neural Networks (CNNs)
-
-[![Python](https://img.shields.io/badge/Python-3.9-blue?logo=python&logoColor=white)]()
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red?logo=pytorch&logoColor=white)]()
-[![Status](https://img.shields.io/badge/Status-Course%20Project-green)]()
-[![License](https://img.shields.io/badge/License-Educational-lightgrey)]()
-
-> **Đồ án môn học Công nghệ Thông tin – Xây dựng mô hình CNN phát hiện ảnh giả mạo (Deepfake / AI-generated)**
-
----
-
-## 👤 Thông tin chung
-
-- **Sinh viên thực hiện:** Nguyễn Đức Thịnh  
-- **Trường:** Đại học Sư phạm Kỹ thuật TP.HCM (HCMUTE)  
-- **Giảng viên hướng dẫn:** TS. Lê Văn Vinh  
-- **Môn học:** Công nghệ Thông tin  
-
----
-
-## 📌 Giới thiệu (Introduction)
-
-Dự án này tập trung vào việc **nghiên cứu và xây dựng một mô hình Convolutional Neural Network (CNN) thủ công** nhằm phát hiện sự khác biệt giữa:
-
-- ✅ **REAL** – Ảnh thật
-- ❌ **FAKE** – Ảnh được sinh ra bởi AI (Deepfake / Synthetic Image)
-
-Mô hình được xây dựng bằng **PyTorch**, huấn luyện và đánh giá trên bộ dữ liệu **CIFAKE**, đạt được:
-
-- 🎯 **Test Accuracy ≈ 94% sau 10 epochs**
-- Học ổn định, giảm overfitting nhờ BatchNorm & Dropout
-
----
-
-## 📂 Dataset
-
-- **Tên dataset:** CIFAKE – Real and AI-Generated Synthetic Images  
-- **Nguồn:** Kaggle  
-  👉 https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images  
-
-### 📊 Thông tin chi tiết
-| Thành phần | Số lượng |
-|-----------|----------|
-| Training images | 100,000 |
-| Testing images | 20,000 |
-| Số lớp | 2 (REAL / FAKE) |
-| Kích thước ảnh | 224 × 224 (resize trong code) |
-
----
-
-## 🛠️ Công nghệ sử dụng (Tech Stack)
-
-- **Ngôn ngữ:** Python
-- **Deep Learning Framework:** PyTorch
-- **Môi trường:** Google Colab (GPU NVIDIA T4)
-
-### 🔧 Kỹ thuật chính
-- Data Augmentation:
-  - RandomHorizontalFlip
-  - RandomRotation
-  - ColorJitter
-- Custom CNN Architecture
-- Batch Normalization
-- Dropout chống overfitting
-- SGD Optimizer với Momentum
-
----
-
-## 🧠 Kiến trúc mô hình (Model Architecture)
-
-Mô hình **MyNet** gồm 4 khối tích chập (Conv Blocks):
-
-Input Image (3 x 224 x 224)
-│
-├── Conv Block 1: Conv2d (3 → 32) → BatchNorm → ReLU → MaxPool
-├── Conv Block 2: Conv2d (32 → 64) → BatchNorm → ReLU → MaxPool
-├── Conv Block 3: Conv2d (64 → 128) → BatchNorm → ReLU → MaxPool
-├── Conv Block 4: Conv2d (128 → 256) → BatchNorm → ReLU → MaxPool
-│
-├── Flatten
-├── Linear (512) → ReLU → Dropout (0.5)
-└── Linear (2 classes: REAL / FAKE)
-
-
-### ⚙️ Cấu hình huấn luyện
-- **Loss Function:** CrossEntropyLoss  
-- **Optimizer:** SGD  
-  - Learning rate = 0.001  
-  - Momentum = 0.9  
-- **Epochs:** 10  
-
----
-
-## 🚀 Hướng dẫn chạy (How to Run)
-
-### 1️⃣ Cài đặt thư viện
-
-pip install torch torchvision matplotlib kaggle
-
-### 2️⃣ Chuẩn bị Kaggle API
-
-Dự án chạy tốt nhất trên Google Colab và tải dataset tự động từ Kaggle.
-
-Các bước:
-
-Đăng nhập Kaggle → Account → Settings
-
-Chọn Create New Token
-
-Tải file kaggle.json
-
-Upload file này khi notebook yêu cầu
-
-### 3️⃣ Training & Testing
-
-Mở file notebook:
-
-CNNs_Deepfake_Detection.ipynb
-
-
-Chạy lần lượt các bước:
-
-Tải & giải nén dataset
-
-Preprocessing & DataLoader
-
-Khởi tạo mô hình CNN
-
-Training loop
-
-Evaluation & Visualization
-
-## 📊 Kết quả (Results)
-
-Sau 10 epochs huấn luyện:
-
-Chỉ số	Giá trị
-Training Loss	~0.17
-Test Accuracy	~94.6%
-Overfitting	Thấp
-
-📈 Biểu đồ Loss & Accuracy được sinh tự động trong notebook sau khi training.
-
-## 🧪 Nhận xét & Hạn chế
-
-### ✅ Ưu điểm:
-
-Kiến trúc CNN tự xây dựng, dễ hiểu
-
-Accuracy cao với dataset lớn
-
-Huấn luyện ổn định
-
-### ⚠️ Hạn chế:
-
-Chỉ sử dụng CNN cơ bản
-
-Chưa khai thác đặc trưng miền tần số (FFT/DCT)
-
-Chưa so sánh với các mô hình SOTA (Xception, EfficientNet, ViT)
-
-### 🔮 Hướng phát triển
-
-So sánh CNN với Transfer Learning (ResNet, EfficientNet)
-
-Áp dụng Frequency Domain Analysis (FFT / F3Net)
-
-Thử nghiệm video deepfake (FaceForensics++)
-
-Triển khai Web demo (Streamlit / Flask)
-
-### 📝 License
-
-Dự án được thực hiện phục vụ mục đích học tập và nghiên cứu,
-không sử dụng cho mục đích thương mại.
->>>>>>> 1b2de86c4d64ecbf6f80146b36426771f234c7e3
