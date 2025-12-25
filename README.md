@@ -65,7 +65,7 @@
 - Node.js 18+
 - Git
 
-### 1️Clone Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/ducthinh4477/CNNs-Deepfake_Detection.git
