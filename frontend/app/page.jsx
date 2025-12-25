@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 // API Base URL: Uses environment variable in production, localhost in development
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://deepscan-api.onrender.com/';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://deepscan-api.onrender.com';
 
 // Model info constant (synced with backend)
 const MODEL_INFO = {
@@ -177,10 +177,11 @@ export default function Home() {
       formData.append('file', file);
 
       // Call the /analyze endpoint using axios
-      const response = await axios.post('http://127.0.0.1:8000/analyze', formData, {
+      const response = await axios.post(`${API_BASE}/analyze`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 60000, // 60 second timeout for cold starts on Render
       });
 
       const data = response.data;
