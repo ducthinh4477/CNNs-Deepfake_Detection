@@ -1,4 +1,4 @@
-# 🛡️ DeepScan - Hệ Thống Phát Hiện Deepfake
+# DeepScan - Hệ Thống Phát Hiện Deepfake
 
 <div align="center">
 
@@ -18,64 +18,32 @@
 
 ---
 
-## 🎯 Tổng quan
+## Tổng quan
 
 **DeepScan** là ứng dụng full-stack phát hiện deepfake kết hợp mô hình CNN mạnh mẽ dựa trên PyTorch với giao diện web hiện đại, trực quan. Upload bất kỳ hình ảnh nào và nhận phân tích tức thì với các công cụ trực quan hóa pháp y để hiểu *tại sao* một hình ảnh có thể là giả mạo.
 
-### ✨ Điểm nổi bật
+### Điểm nổi bật
 
-- 🧠 **Custom CNN Model** được huấn luyện trên dataset CIFAKE với **độ chính xác 94%**
-- 🔥 **Phân tích thời gian thực** với kết quả dự đoán tức thì
-- 🎨 **Trực quan hóa pháp y** bao gồm Heatmap (Grad-CAM) và Fourier Analysis
-- ⚡ **Thanh trượt Confidence Threshold** để điều chỉnh ngưỡng quyết định động
-- 🌙 **Giao diện tối hiện đại** với bố cục 3 cột chuyên nghiệp
+- **Custom CNN Model** được huấn luyện trên dataset CIFAKE với **độ chính xác 94%**
+- **Phân tích thời gian thực** với kết quả dự đoán tức thì
+- **Trực quan hóa pháp y** bao gồm Heatmap (Grad-CAM) và Fourier Analysis
+- **Thanh trượt Confidence Threshold** để điều chỉnh ngưỡng quyết định động
+- **Giao diện tối hiện đại** với bố cục 3 cột chuyên nghiệp
 
 ---
 
-## 🖼️ Ảnh chụp màn hình
+## Giao diện 
 
 <div align="center">
 
-### Giao diện chính - Bố cục 3 cột
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/802315b2-38fd-4736-929f-3caffef1e861" />
 
-| Panel Upload | Không gian phân tích | Panel báo cáo |
-|:---:|:---:|:---:|
-| ![Upload](https://via.placeholder.com/250x400/1e293b/60a5fa?text=Upload+Panel) | ![Workspace](https://via.placeholder.com/400x400/1e293b/60a5fa?text=Image+Workspace) | ![Report](https://via.placeholder.com/250x400/1e293b/60a5fa?text=Analysis+Report) |
-| *Upload file & thông tin model* | *Xem ảnh gốc, Heatmap, Fourier* | *Kết quả & ảnh phân tích* |
-
-### Kết quả phân tích
-
-| Phát hiện ảnh thật | Phát hiện ảnh giả |
-|:---:|:---:|
-| ![Real](https://via.placeholder.com/350x250/1e293b/10b981?text=✓+AUTHENTIC) | ![Fake](https://via.placeholder.com/350x250/1e293b/ef4444?text=✗+LIKELY+FAKE) |
 
 </div>
 
-> 📸 *Thay thế các ảnh placeholder bằng ảnh chụp màn hình thực tế của ứng dụng*
 
 ---
 
-## 🏗️ Kiến trúc
-
-DeepScan sử dụng **Bố cục 3 cột** hiện đại được thiết kế cho phân tích pháp y chuyên nghiệp:
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     Ứng dụng DeepScan                               │
-├──────────────┬────────────────────────────────┬─────────────────────┤
-│              │                                │                     │
-│   📁 TRÁI    │        🖼️ GIỮA                │     📊 PHẢI         │
-│   SIDEBAR    │        WORKSPACE              │     PANEL           │
-│              │                                │                     │
-│  • Upload    │  • Xem ảnh gốc                │  • Badge trạng thái │
-│  • Thông tin │  • Lớp phủ Heatmap            │  • Gauge confidence │
-│    file      │  • Phân tích Fourier          │  • Thanh ngưỡng     │
-│  • Thông tin │  • Điều hướng tab             │  • Ảnh pháp y       │
-│    Model     │                                │  • Chi tiết         │
-│  • Hành động │                                │                     │
-│              │                                │                     │
-└──────────────┴────────────────────────────────┴─────────────────────┘
-```
 
 ### Tech Stack
 
@@ -89,7 +57,7 @@ DeepScan sử dụng **Bố cục 3 cột** hiện đại được thiết kế 
 
 ---
 
-## 🚀 Cài đặt
+## Cài đặt
 
 ### Yêu cầu hệ thống
 
@@ -97,14 +65,14 @@ DeepScan sử dụng **Bố cục 3 cột** hiện đại được thiết kế 
 - Node.js 18+
 - Git
 
-### 1️⃣ Clone Repository
+### 1️Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/CNNs-Deepfake_Detection.git
+git clone https://github.com/ducthinh4477/CNNs-Deepfake_Detection.git
 cd CNNs-Deepfake_Detection
 ```
 
-### 2️⃣ Cài đặt Backend (FastAPI)
+### Cài đặt Backend (FastAPI)
 
 ```bash
 # Di chuyển vào thư mục backend
@@ -129,10 +97,10 @@ pip install -r requirements.txt
 uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-✅ Backend sẽ chạy tại: `http://127.0.0.1:8000`  
-📚 Tài liệu API: `http://127.0.0.1:8000/docs`
+Backend sẽ chạy tại: `http://127.0.0.1:8000`  
+Tài liệu API: `http://127.0.0.1:8000/docs`
 
-### 3️⃣ Cài đặt Frontend (Next.js)
+### Cài đặt Frontend (Next.js)
 
 ```bash
 # Mở terminal mới và di chuyển vào thư mục frontend
@@ -145,29 +113,11 @@ npm install
 npm run dev
 ```
 
-✅ Frontend sẽ chạy tại: `http://localhost:3000`
+Frontend sẽ chạy tại: `http://localhost:3000`
 
 ---
 
-## 📖 Sử dụng
-
-1. **Mở** ứng dụng tại `http://localhost:3000`
-2. **Upload** một hình ảnh sử dụng sidebar bên trái (PNG, JPG tối đa 10MB)
-3. **Nhấn** "Analyze Image" để chạy phát hiện deepfake
-4. **Xem** kết quả ở panel bên phải:
-   - Badge trạng thái (AUTHENTIC / LIKELY FAKE)
-   - Gauge phần trăm độ tin cậy
-   - Mức độ đánh giá rủi ro
-5. **Điều chỉnh** thanh trượt Confidence Threshold để thay đổi ngưỡng quyết định
-6. **Khám phá** các công cụ trực quan hóa pháp y:
-   - Chuyển đổi giữa các chế độ xem Original, Heatmap và Fourier
-   - Kiểm tra các ảnh pháp y trong panel báo cáo
-
----
-
-## 🔬 Phương pháp Phân tích Pháp y
-
-### 🔥 Heatmap (Grad-CAM)
+### Heatmap (Grad-CAM)
 
 **Gradient-weighted Class Activation Mapping** trực quan hóa những vùng nào của ảnh mà CNN tập trung vào khi đưa ra dự đoán.
 
@@ -177,9 +127,9 @@ npm run dev
 | **Vùng Xanh dương/Xanh lá** | Kích hoạt thấp - ít quan trọng cho quyết định |
 | **Điểm nóng tập trung** | Có thể chỉ ra các vùng bị chỉnh sửa |
 
-> 💡 *Nếu heatmap hiển thị sự tập trung bất thường ở các khu vực cụ thể (mắt, miệng, cạnh), ảnh có thể bị chỉnh sửa cục bộ.*
+> *Nếu heatmap hiển thị sự tập trung bất thường ở các khu vực cụ thể (mắt, miệng, cạnh), ảnh có thể bị chỉnh sửa cục bộ.*
 
-### 📊 Fourier Frequency Analysis
+### Fourier Frequency Analysis
 
 **Fast Fourier Transform (FFT)** chuyển đổi ảnh sang miền tần số, tiết lộ các mẫu không nhìn thấy được bằng mắt thường.
 
@@ -190,11 +140,11 @@ npm run dev
 | **Grid artifacts** | Có thể chỉ ra ảnh được tạo bởi GAN |
 | **Đối xứng bất thường** | Có thể gợi ý quá trình tạo tổng hợp |
 
-> 💡 *Ảnh được tạo bởi AI thường có dấu vân tay tần số đặc trưng khác với ảnh chụp thật.*
+> *Ảnh được tạo bởi AI thường có dấu vân tay tần số đặc trưng khác với ảnh chụp thật.*
 
 ---
 
-## 📁 Cấu trúc dự án
+## Cấu trúc dự án
 
 ```
 CNNs-Deepfake_Detection/
@@ -222,7 +172,7 @@ CNNs-Deepfake_Detection/
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 ### Endpoints
 
@@ -260,7 +210,7 @@ curl -X POST "http://127.0.0.1:8000/analyze" \
 
 ---
 
-## 🧠 Thông tin Model
+## Thông tin Model
 
 | Thuộc tính | Giá trị |
 |----------|-------|
@@ -270,40 +220,3 @@ curl -X POST "http://127.0.0.1:8000/analyze" \
 | **Input Size** | 224 × 224 pixels |
 | **Output** | Binary (Real/Fake) |
 | **Framework** | PyTorch |
-
----
-
-## 🤝 Đóng góp
-
-Chúng tôi hoan nghênh mọi đóng góp! Vui lòng tạo Pull Request.
-
-1. Fork repository
-2. Tạo feature branch (`git checkout -b feature/TinhNangMoi`)
-3. Commit các thay đổi (`git commit -m 'Thêm tính năng mới'`)
-4. Push lên branch (`git push origin feature/TinhNangMoi`)
-5. Mở Pull Request
-
----
-
-## 📄 License
-
-Dự án này được cấp phép theo MIT License - xem file [LICENSE](LICENSE) để biết chi tiết.
-
----
-
-## 🙏 Cảm ơn
-
-- **CIFAKE Dataset** cho dữ liệu huấn luyện
-- **PyTorch** team cho deep learning framework
-- **FastAPI** cho Python web framework xuất sắc
-- **Vercel** cho Next.js và các công cụ frontend
-
----
-
-<div align="center">
-
-**Được xây dựng với ❤️ bởi Nhóm Đồ án Tốt nghiệp HCMUTE**
-
-⭐ Star repo này nếu bạn thấy hữu ích! ⭐
-
-</div>
