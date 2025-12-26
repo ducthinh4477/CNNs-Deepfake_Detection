@@ -220,3 +220,31 @@ curl -X POST "http://127.0.0.1:8000/analyze" \
 | **Input Size** | 224 × 224 pixels |
 | **Output** | Binary (Real/Fake) |
 | **Framework** | PyTorch |
+
+---
+
+## Deploy (Render + Vercel)
+
+### Kiến trúc Deployment
+
+```
+┌─────────────────────┐         ┌─────────────────────┐
+│     VERCEL          │         │     RENDER          │
+│  (Frontend Host)    │         │  (Backend Host)     │
+│                     │         │                     │
+│  ┌───────────────┐  │  HTTPS  │  ┌───────────────┐  │
+│  │   Next.js     │──┼────────►│──│   FastAPI     │  │
+│  │   React App   │  │         │  │   API Server  │  │
+│  └───────────────┘  │         │  └───────────────┘  │
+│                     │         │         │           │
+│  ENV:               │         │         ▼           │
+│  NEXT_PUBLIC_API_URL│         │  ┌───────────────┐  │
+│                     │         │  │   PyTorch     │  │
+└─────────────────────┘         │  │   CNN Model   │  │
+                                │  └───────────────┘  │
+                                │                     │
+                                │  ENV:               │
+                                │  MODEL_DOWNLOAD_URL │
+                                │  FRONTEND_URL       │
+                                └─────────────────────┘
+```

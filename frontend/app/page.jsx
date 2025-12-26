@@ -136,11 +136,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('original');
   const [error, setError] = useState(null);
-  const [confidenceThreshold, setConfidenceThreshold] = useState(50);
   const fileInputRef = useRef(null);
-
-  // Dynamically calculate if image is Real based on threshold
-  const computedIsReal = result ? result.confidence * 100 > confidenceThreshold : false;
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0];
@@ -181,7 +177,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        timeout: 60000, // 60 second timeout for cold starts on Render
+        timeout: 180000, // 180 second timeout for cold starts on Render
       });
 
       const data = response.data;
@@ -191,6 +187,11 @@ export default function Home() {
         confidence: data.confidence_score,
         riskLevel: data.risk_level,
         filename: data.filename,
+        // Hybrid analysis fields
+        finalScore: data.final_score,
+        heatmapScore: data.heatmap_score,
+        fourierScore: data.fourier_score,
+        analysisReason: data.analysis_reason,
       });
 
       // Handle base64 images if present in the response
@@ -221,14 +222,18 @@ export default function Home() {
     setFourierUrl(null);
     setError(null);
     setActiveTab('original');
-    setConfidenceThreshold(50);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden flex bg-ds-primary">
+    <div className="h-screen w-full overflow-hidden flex bg-ds-primary relative">
+      {/* Student Info Badge */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg bg-ds-secondary/80 backdrop-blur-md border border-ds-border shadow-lg">
+        <p className="text-sm font-medium text-ds-text">Nguyễn Đức Thịnh - 23110156</p>
+      </div>
+
       {/* Left Sidebar */}
       <aside className="w-64 flex-shrink-0 bg-ds-secondary border-r border-ds-border overflow-y-auto">
         <div className="p-4 space-y-6">
@@ -461,43 +466,29 @@ export default function Home() {
           ) : (
             // Results Display
             <div className="space-y-6">
-              {/* Status Badge - uses dynamic threshold */}
+              {/* Status Badge - uses hybrid analysis result from backend */}
               <div className="flex justify-center">
-                <StatusBadge isReal={computedIsReal} riskLevel={result.riskLevel} />
+                <StatusBadge isReal={result.isReal} riskLevel={result.riskLevel} />
               </div>
 
-              {/* Confidence Threshold Slider */}
+              {/* Hybrid Score Explanation */}
               <div className="bg-ds-elevated/30 rounded-xl p-4 border border-ds-border">
                 <h3 className="text-sm font-medium text-ds-text-secondary mb-3">
-                  Confidence Threshold
+                  Hybrid Analysis Mode
                 </h3>
-                <div className="space-y-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={confidenceThreshold}
-                    onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
-                    className="w-full h-2 bg-ds-elevated rounded-lg appearance-none cursor-pointer accent-ds-accent"
-                  />
-                  <div className="flex justify-between text-xs text-ds-text-muted">
-                    <span>0%</span>
-                    <span className="text-ds-accent font-semibold">{confidenceThreshold}%</span>
-                    <span>100%</span>
-                  </div>
-                  <p className="text-xs text-ds-text-muted mt-2">
-                    If confidence &gt; {confidenceThreshold}% → <span className="text-ds-success">Real</span>, otherwise → <span className="text-ds-danger">Fake</span>
-                  </p>
-                </div>
+                <p className="text-xs text-ds-text-muted">
+                  Final score = 40% CNN + 30% Heatmap + 30% Fourier. 
+                  Forensic analysis can override CNN if anomalies detected.
+                </p>
               </div>
 
-              {/* Confidence Gauge */}
+              {/* Confidence Gauge - shows Final Hybrid Score */}
               <div className="bg-ds-elevated/30 rounded-xl p-4 border border-ds-border">
                 <h3 className="text-sm font-medium text-ds-text-secondary mb-4 text-center">
-                  Detection Confidence
+                  Final Hybrid Score
                 </h3>
                 <div className="flex justify-center">
-                  <GaugeChart value={result.confidence * 100} isReal={computedIsReal} />
+                  <GaugeChart value={result.confidence * 100} isReal={result.isReal} />
                 </div>
               </div>
 
@@ -521,6 +512,11 @@ export default function Home() {
                         <div className="flex items-center gap-2">
                           <Eye className="w-4 h-4 text-ds-accent" />
                           <span className="text-xs text-ds-text-muted">Heatmap</span>
+                          {result.heatmapScore !== undefined && (
+                            <span className={`text-xs font-medium ${result.heatmapScore > 0.5 ? 'text-ds-danger' : 'text-ds-success'}`}>
+                              ({(result.heatmapScore * 100).toFixed(1)}%)
+                            </span>
+                          )}
                         </div>
                         <img
                           src={heatmapUrl}
@@ -534,6 +530,11 @@ export default function Home() {
                         <div className="flex items-center gap-2">
                           <Waves className="w-4 h-4 text-ds-accent" />
                           <span className="text-xs text-ds-text-muted">Fourier Analysis</span>
+                          {result.fourierScore !== undefined && (
+                            <span className={`text-xs font-medium ${result.fourierScore > 0.5 ? 'text-ds-danger' : 'text-ds-success'}`}>
+                              ({(result.fourierScore * 100).toFixed(1)}%)
+                            </span>
+                          )}
                         </div>
                         <img
                           src={fourierUrl}
@@ -560,36 +561,69 @@ export default function Home() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-ds-text-muted">Classification</span>
-                    <span className={computedIsReal ? 'text-ds-success' : 'text-ds-danger'}>
-                      {computedIsReal ? 'Real' : 'Fake'}
+                    <span className={result.isReal ? 'text-ds-success' : 'text-ds-danger'}>
+                      {result.isReal ? 'Real' : 'Fake'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-ds-text-muted">Score</span>
+                    <span className="text-ds-text-muted">Final Score</span>
                     <span className="text-ds-text">
                       {(result.confidence * 100).toFixed(2)}%
                     </span>
                   </div>
+                  {result.heatmapScore !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-ds-text-muted">Heatmap Score</span>
+                      <span className={result.heatmapScore > 0.5 ? 'text-ds-danger' : 'text-ds-success'}>
+                        {(result.heatmapScore * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                  {result.fourierScore !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-ds-text-muted">Fourier Score</span>
+                      <span className={result.fourierScore > 0.5 ? 'text-ds-danger' : 'text-ds-success'}>
+                        {(result.fourierScore * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Interpretation */}
+              {/* Analysis Interpretation - Dynamic from Backend */}
               <div className="bg-ds-elevated/30 rounded-xl p-4 border border-ds-border">
                 <div className="flex items-start gap-2">
                   <Info className="w-4 h-4 text-ds-accent mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-ds-text-muted leading-relaxed">
-                    {computedIsReal ? (
-                      <>
-                        This image appears to be <strong className="text-ds-success">authentic</strong>. 
-                        The CNN model found patterns consistent with real photographs.
-                      </>
+                  <div className="text-xs text-ds-text-muted leading-relaxed space-y-2">
+                    {result.analysisReason ? (
+                      // Parse and display each reason on a new line
+                      result.analysisReason.split(' | ').map((reason, index) => (
+                        <p key={index} className={
+                          reason.includes('✓') ? 'text-ds-success' :
+                          reason.includes('❌') || reason.includes('⚠️') ? 'text-ds-danger' :
+                          reason.startsWith('[') ? 'text-ds-text-muted font-mono text-[10px]' :
+                          'text-ds-text-secondary'
+                        }>
+                          {reason}
+                        </p>
+                      ))
                     ) : (
-                      <>
-                        This image shows signs of <strong className="text-ds-danger">manipulation</strong>. 
-                        The analysis detected patterns commonly associated with AI-generated content.
-                      </>
+                      // Fallback static message
+                      <p>
+                        {result.isReal ? (
+                          <>
+                            This image appears to be <strong className="text-ds-success">authentic</strong>. 
+                            The analysis found patterns consistent with real photographs.
+                          </>
+                        ) : (
+                          <>
+                            This image shows signs of <strong className="text-ds-danger">manipulation</strong>. 
+                            The analysis detected patterns commonly associated with AI-generated content.
+                          </>
+                        )}
+                      </p>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
