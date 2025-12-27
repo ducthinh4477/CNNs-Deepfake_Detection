@@ -69,12 +69,15 @@ MODELS_CONFIG = load_models_config()
 # MODEL AUTO-DOWNLOAD (for Cloud Deployment)
 # =============================================================================
 
-# Google Drive File ID for the model
-GOOGLE_DRIVE_FILE_ID = "1a0kszqbVthsrEnCSV8mzk4vrupSUmDeB"
+# Google Drive File IDs for each model
+MODEL_DOWNLOAD_URLS = {
+    "custom_cnn_cifake.pth": "https://drive.google.com/uc?export=download&id=1a0kszqbVthsrEnCSV8mzk4vrupSUmDeB&confirm=t",
+    "best_model.pth": "https://drive.google.com/uc?export=download&id=16v-yryyAM-ynJ0qHNy4EeZFkFsniBhJX&confirm=t"
+}
 
 def download_model_if_not_exists(model_path: str) -> bool:
     """
-    Check if model file exists. If not, download from MODEL_DOWNLOAD_URL.
+    Check if model file exists. If not, download from configured URL.
     
     Returns:
         True if model exists or was downloaded successfully, False otherwise.
@@ -83,15 +86,24 @@ def download_model_if_not_exists(model_path: str) -> bool:
         print(f"✅ Model file found: {model_path}")
         return True
     
-    # Try environment variable first, fallback to hardcoded Google Drive ID
-    model_url = os.environ.get("MODEL_DOWNLOAD_URL")
+    # Get model filename from path
+    model_filename = os.path.basename(model_path)
+    
+    # Try environment variable first (MODEL_DOWNLOAD_URL_<filename>)
+    env_var_name = f"MODEL_DOWNLOAD_URL_{model_filename.replace('.', '_').upper()}"
+    model_url = os.environ.get(env_var_name)
     
     if not model_url:
-        # Use hardcoded Google Drive file ID as fallback
-        model_url = f"https://drive.google.com/file/d/{GOOGLE_DRIVE_FILE_ID}/view"
-        print(f"📥 Using default Google Drive model (ID: {GOOGLE_DRIVE_FILE_ID})")
+        # Fallback to configured URLs
+        model_url = MODEL_DOWNLOAD_URLS.get(model_filename)
+        if model_url:
+            print(f"📥 Using configured download URL for {model_filename}")
     
-    print(f"📥 Model not found locally. Downloading from: {model_url}")
+    if not model_url:
+        print(f"❌ No download URL configured for {model_filename}")
+        return False
+    
+    print(f"📥 Model not found locally. Downloading {model_filename}...")
     
     try:
         # For Google Drive links, convert to direct download URL
