@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import {
   Upload,
@@ -16,19 +16,88 @@ import {
   Loader2,
   Image as ImageIcon,
   Info,
-  Zap
+  Zap,
+  ChevronDown,
+  Cpu
 } from 'lucide-react';
 
 // API Base URL: Uses environment variable in production, localhost in development
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://deepscan-api.onrender.com';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Model info constant (synced with backend)
-const MODEL_INFO = {
-  name: 'Custom CNN',
-  dataset: 'CIFAKE',
-  accuracy: 92.0,
-  version: '1.0',
-};
+// Model Selector Component
+function ModelSelector({ models, currentModel, onSelect, isLoading }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+  
+  const selectedModel = models.find(m => m.id === currentModel) || models[0];
+  
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={isLoading}
+        className="w-full px-3 py-2 bg-ds-elevated border border-ds-border rounded-lg flex items-center justify-between hover:bg-ds-elevated/80 transition-colors disabled:opacity-50"
+      >
+        <div className="flex items-center gap-2">
+          <div 
+            className="w-2 h-2 rounded-full" 
+            style={{ backgroundColor: selectedModel?.color || '#3B82F6' }}
+          />
+          <span className="text-sm text-ds-text truncate">
+            {selectedModel?.name || 'Select Model'}
+          </span>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-ds-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-ds-elevated border border-ds-border rounded-lg shadow-2xl z-[9999] overflow-hidden max-h-64 overflow-y-auto">
+          {models.map((model) => (
+            <button
+              key={model.id}
+              onClick={() => {
+                onSelect(model.id);
+                setIsOpen(false);
+              }}
+              disabled={!model.is_available}
+              className={`w-full px-3 py-2 text-left hover:bg-ds-primary/50 transition-colors flex items-center gap-2 ${
+                model.id === currentModel ? 'bg-ds-accent/20' : ''
+              } ${!model.is_available ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <div 
+                className="w-2 h-2 rounded-full flex-shrink-0" 
+                style={{ backgroundColor: model.color }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-ds-text truncate">{model.name}</p>
+                <p className="text-xs text-ds-text-muted">
+                  {model.accuracy}% accuracy • {model.dataset}
+                </p>
+              </div>
+              {model.id === currentModel && (
+                <CheckCircle className="w-4 h-4 text-ds-accent flex-shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Gauge Chart Component
 function GaugeChart({ value, isReal }) {
@@ -137,6 +206,64 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('original');
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
+  
+  // Model selection state
+  const [models, setModels] = useState([]);
+  const [currentModel, setCurrentModel] = useState('');
+  const [isModelLoading, setIsModelLoading] = useState(false);
+
+  // Fetch available models on mount
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        console.log('🔍 Fetching models from:', `${API_BASE}/models`);
+        const response = await axios.get(`${API_BASE}/models`);
+        console.log('✅ Models fetched:', response.data);
+        setModels(response.data.models);
+        setCurrentModel(response.data.current_model);
+      } catch (err) {
+        console.error('❌ Failed to fetch models:', err);
+        console.error('API Base:', API_BASE);
+        // Set default fallback
+        setModels([{
+          id: 'cnn_cifake',
+          name: 'CNN Custom (CIFAKE)',
+          accuracy: 92.0,
+          dataset: 'CIFAKE',
+          color: '#10B981',
+          is_available: true,
+          is_current: true
+        }]);
+        setCurrentModel('cnn_cifake');
+      }
+    };
+    fetchModels();
+  }, []);
+
+  // Handle model selection change
+  const handleModelSelect = async (modelId) => {
+    if (modelId === currentModel) return;
+    
+    setIsModelLoading(true);
+    try {
+      const response = await axios.post(`${API_BASE}/models/${modelId}/select`);
+      if (response.data.success) {
+        setCurrentModel(modelId);
+        // Clear previous results when model changes
+        setResult(null);
+        setHeatmapUrl(null);
+        setFourierUrl(null);
+      }
+    } catch (err) {
+      console.error('Failed to select model:', err);
+      setError('Failed to switch model. Please try again.');
+    } finally {
+      setIsModelLoading(false);
+    }
+  };
+
+  // Get current model info
+  const currentModelInfo = models.find(m => m.id === currentModel) || {};
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0];
@@ -235,7 +362,7 @@ export default function Home() {
       </div>
 
       {/* Left Sidebar */}
-      <aside className="w-64 flex-shrink-0 bg-ds-secondary border-r border-ds-border overflow-y-auto">
+      <aside className="w-64 flex-shrink-0 bg-ds-secondary border-r border-ds-border overflow-y-auto relative">
         <div className="p-4 space-y-6">
           {/* Logo/Brand */}
           <div className="flex items-center gap-3 pb-4 border-b border-ds-border">
@@ -326,26 +453,48 @@ export default function Home() {
           </div>
 
           {/* Model Info */}
-          <div className="space-y-3 pt-4 border-t border-ds-border">
-            <h2 className="text-sm font-semibold text-ds-text-secondary uppercase tracking-wide">
-              Model Info
+          <div className="space-y-3 pt-4 border-t border-ds-border relative z-50">
+            <h2 className="text-sm font-semibold text-ds-text-secondary uppercase tracking-wide flex items-center gap-2">
+              <Cpu className="w-4 h-4" />
+              Select Model
             </h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-ds-text-muted">Model</span>
-                <span className="text-ds-text">{MODEL_INFO.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ds-text-muted">Dataset</span>
-                <span className="text-ds-text">{MODEL_INFO.dataset}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ds-text-muted">Accuracy</span>
-                <span className="text-ds-success font-medium">
-                  {MODEL_INFO.accuracy}%
-                </span>
-              </div>
+            
+            {/* Model Selector Dropdown - with explicit positioning */}
+            <div className="relative overflow-visible">
+              <ModelSelector
+                models={models}
+                currentModel={currentModel}
+                onSelect={handleModelSelect}
+                isLoading={isModelLoading || isLoading}
+              />
             </div>
+            
+            {/* Current Model Info */}
+            {currentModelInfo.name && (
+              <div className="space-y-2 text-sm p-3 bg-ds-elevated/30 rounded-lg">
+                <div className="flex justify-between">
+                  <span className="text-ds-text-muted">Architecture</span>
+                  <span className="text-ds-text">{currentModelInfo.architecture || 'CNN'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ds-text-muted">Dataset</span>
+                  <span className="text-ds-text">{currentModelInfo.dataset || 'Unknown'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ds-text-muted">Accuracy</span>
+                  <span className="text-ds-success font-medium">
+                    {currentModelInfo.accuracy || 0}%
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {isModelLoading && (
+              <div className="flex items-center gap-2 text-xs text-ds-text-muted">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Loading model...
+              </div>
+            )}
           </div>
         </div>
       </aside>

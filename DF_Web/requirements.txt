@@ -12,13 +12,8 @@ opencv-python
 # HTTP Requests (for model download)
 requests
 
-# Optional: Streamlit (for standalone UI)
-streamlit
-
 # Production server
 gunicorn
 
 # Python multipart (for file uploads)
 python-multipart
-
-requests

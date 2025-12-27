@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 from PIL import Image
 from model import MyNet # Import class từ file model.py
+from model2 import CombinedModel # Import CombinedModel từ model2.py
 import os
 
 
@@ -12,32 +13,65 @@ class DeepfakeAI:
     """
     AI Engine for Deepfake Detection
     Separates image processing for model inference vs UI display
+    Supports multiple model architectures: MyNet, CombinedModel
     """
     
     # Constants for model input size (used for inference only)
     MODEL_INPUT_SIZE = (224, 224)
+    # CombinedModel uses 160x160 input
+    COMBINED_MODEL_INPUT_SIZE = (160, 160)
     # Constants for analysis visualization (preserves aspect ratio better)
     ANALYSIS_SIZE = (512, 512)
     
-    def __init__(self, model_path):
+    def __init__(self, model_path, model_type='MyNet'):
+        """
+        Initialize DeepfakeAI with specified model
+        
+        Args:
+            model_path: Path to the model weights file (.pth)
+            model_type: Type of model architecture ('MyNet' or 'CombinedModel')
+        """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = self._load_model(model_path)
+        self.model_type = model_type
+        self.model_path = model_path
+        
+        # Set input size based on model type
+        if model_type == 'CombinedModel':
+            self.input_size = self.COMBINED_MODEL_INPUT_SIZE
+        else:
+            self.input_size = self.MODEL_INPUT_SIZE
+        
+        self.model = self._load_model(model_path, model_type)
+        
         # Transform ONLY for model inference - không ảnh hưởng đến UI display
         self.transform = transforms.Compose([
-            transforms.Resize(self.MODEL_INPUT_SIZE),
+            transforms.Resize(self.input_size),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
-    def _load_model(self, path):
-        model = MyNet()
+    def _load_model(self, path, model_type='MyNet'):
+        """
+        Load model based on architecture type
+        
+        Args:
+            path: Path to model weights
+            model_type: 'MyNet' or 'CombinedModel'
+        """
+        # Create model instance based on type
+        if model_type == 'CombinedModel':
+            model = CombinedModel()
+            print(f"🧠 Sử dụng kiến trúc: CombinedModel (EfficientNet + Frequency)")
+        else:
+            model = MyNet()
+            print(f"🧠 Sử dụng kiến trúc: MyNet (Custom CNN)")
         
         abs_path = os.path.abspath(path)
         print(f"🔄 Đang tìm file trọng số (.pth) tại: {abs_path}")
         
         if not os.path.exists(path):
-            print(f"LỖI TO: Không tìm thấy file tại đường dẫn '{path}'")
-            print(f"Thư mục code đang chạy tại: {os.getcwd()}")
+            print(f"❌ LỖI: Không tìm thấy file tại đường dẫn '{path}'")
+            print(f"📁 Thư mục code đang chạy tại: {os.getcwd()}")
             try:
                 print(f"📄 Các file đang có ở đây: {os.listdir(os.getcwd())}")
             except:
@@ -46,9 +80,9 @@ class DeepfakeAI:
             try:
                 state_dict = torch.load(path, map_location=self.device)
                 model.load_state_dict(state_dict)
-                print("Đã nạp Model thành công!")
+                print(f"✅ Đã nạp Model '{model_type}' thành công!")
             except Exception as e:
-                print(f"LỖI MODEL: File tồn tại nhưng nạp thất bại. Chi tiết: {e}")
+                print(f"❌ LỖI MODEL: File tồn tại nhưng nạp thất bại. Chi tiết: {e}")
         
         model.to(self.device)
         model.eval()
@@ -110,6 +144,10 @@ class DeepfakeAI:
         Run deepfake prediction on image
         Uses MODEL_INPUT_SIZE internally - does NOT affect original image
         
+        Supports both architectures:
+        - MyNet: 2-class output with softmax
+        - CombinedModel: 1-logit output with sigmoid
+        
         Returns:
             pred: 0 (Real) or 1 (Fake)
             conf: Confidence score (0-1)
@@ -118,9 +156,21 @@ class DeepfakeAI:
         img_tensor = self._prepare_for_model(pil_image)
         with torch.no_grad():
             output = self.model(img_tensor)
-            probs = F.softmax(output, dim=1)
-            conf, pred = torch.max(probs, 1)
-        return pred.item(), conf.item(), img_tensor
+            
+            if self.model_type == 'CombinedModel':
+                # CombinedModel outputs single logit: sigmoid for probability
+                # Output > 0.5 = Fake (1), Output <= 0.5 = Real (0)
+                prob = torch.sigmoid(output).item()
+                pred = 1 if prob > 0.5 else 0
+                conf = prob if pred == 1 else (1 - prob)
+            else:
+                # MyNet outputs 2 classes: softmax for probabilities
+                probs = F.softmax(output, dim=1)
+                conf, pred = torch.max(probs, 1)
+                pred = pred.item()
+                conf = conf.item()
+                
+        return pred, conf, img_tensor
 
     # ========== HEATMAP ANALYSIS ==========
 
@@ -152,17 +202,23 @@ class DeepfakeAI:
         gradients = []
         
         def forward_hook(module, input, output):
-            """Hook to capture feature maps from conv4"""
+            """Hook to capture feature maps from target layer"""
             features.append(output)
         
         def backward_hook(module, grad_input, grad_output):
-            """Hook to capture gradients flowing back through conv4"""
+            """Hook to capture gradients flowing back through target layer"""
             gradients.append(grad_output[0])
         
-        # Register hooks on the last convolutional layer (conv4)
-        # conv4 outputs feature maps of size 14x14 from 224x224 input
-        forward_handle = self.model.conv4.register_forward_hook(forward_hook)
-        backward_handle = self.model.conv4.register_full_backward_hook(backward_hook)
+        # Register hooks on the appropriate layer based on model type
+        # MyNet: conv4 outputs feature maps of size 14x14 from 224x224 input
+        # CombinedModel: use the last conv layer of EfficientNet (conv_branch.features)
+        if self.model_type == 'CombinedModel':
+            target_layer = self.model.conv_branch.features[-1]
+        else:
+            target_layer = self.model.conv4
+            
+        forward_handle = target_layer.register_forward_hook(forward_hook)
+        backward_handle = target_layer.register_full_backward_hook(backward_hook)
         
         try:
             # Prepare image tensor for model (requires grad for backprop)
@@ -173,11 +229,14 @@ class DeepfakeAI:
             self.model.eval()
             output = self.model(img_tensor)
             
-            # Get the predicted class (highest score)
-            pred_class = output.argmax(dim=1).item()
-            
-            # Get the score for the predicted class
-            class_score = output[0, pred_class]
+            # Get the score for backward pass
+            if self.model_type == 'CombinedModel':
+                # CombinedModel: single logit output
+                class_score = output[0, 0]
+            else:
+                # MyNet: 2-class output, use predicted class
+                pred_class = output.argmax(dim=1).item()
+                class_score = output[0, pred_class]
             
             # Backward pass to compute gradients
             self.model.zero_grad()

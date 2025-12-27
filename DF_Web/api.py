@@ -10,14 +10,15 @@ Run: uvicorn api:app --reload --host 0.0.0.0 --port 8000
 
 import os
 import io
+import json
 import base64
 import uuid
 import tempfile
 import requests
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -26,6 +27,42 @@ import numpy as np
 import cv2
 
 from ai_logic import DeepfakeAI
+
+
+# =============================================================================
+# MODEL CONFIGURATION - Central Model Registry
+# =============================================================================
+
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
+MODELS_CONFIG_PATH = os.path.join(MODELS_DIR, "config.json")
+
+def load_models_config() -> Dict:
+    """Load models configuration from config.json"""
+    try:
+        with open(MODELS_CONFIG_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"⚠️ Failed to load models config: {e}")
+        # Return default config
+        return {
+            "default_model": "cnn_cifake",
+            "models": {
+                "cnn_cifake": {
+                    "name": "CNN Custom (CIFAKE)",
+                    "description": "Custom CNN for CIFAKE dataset",
+                    "file": "custom_cnn_cifake.pth",
+                    "architecture": "MyNet",
+                    "input_size": [224, 224],
+                    "accuracy": 92.0,
+                    "dataset": "CIFAKE",
+                    "version": "1.0",
+                    "color": "#10B981"
+                }
+            }
+        }
+
+# Load config at module level
+MODELS_CONFIG = load_models_config()
 
 
 # =============================================================================
@@ -145,32 +182,77 @@ app.add_middleware(
 
 
 # =============================================================================
-# MODEL INITIALIZATION (Singleton - loaded once at startup)
+# MODEL INITIALIZATION (Multi-model support)
 # =============================================================================
 
-MODEL_PATH = "custom_cnn_cifake.pth"
-ai_engine: Optional[DeepfakeAI] = None
+# Cache loaded models to avoid reloading
+loaded_models: Dict[str, DeepfakeAI] = {}
+current_model_id: str = MODELS_CONFIG.get("default_model", "cnn_cifake")
+
+
+def get_model_path(model_id: str) -> Optional[str]:
+    """Get the full path to a model file"""
+    model_info = MODELS_CONFIG.get("models", {}).get(model_id)
+    if not model_info:
+        return None
+    return os.path.join(MODELS_DIR, model_info["file"])
+
+
+def load_model(model_id: str) -> Optional[DeepfakeAI]:
+    """Load a model by ID, using cache if available"""
+    global loaded_models
+    
+    # Return cached model if available
+    if model_id in loaded_models:
+        print(f"📦 Using cached model: {model_id}")
+        return loaded_models[model_id]
+    
+    model_info = MODELS_CONFIG.get("models", {}).get(model_id)
+    if not model_info:
+        print(f"❌ Model not found in config: {model_id}")
+        return None
+    
+    model_path = get_model_path(model_id)
+    if not model_path or not os.path.exists(model_path):
+        print(f"❌ Model file not found: {model_path}")
+        # Try to download if URL is configured
+        if not download_model_if_not_exists(model_path):
+            return None
+    
+    try:
+        architecture = model_info.get("architecture", "MyNet")
+        print(f"🔄 Loading model: {model_id} ({architecture})")
+        ai_engine = DeepfakeAI(model_path=model_path, model_type=architecture)
+        loaded_models[model_id] = ai_engine
+        print(f"✅ Model '{model_id}' loaded successfully!")
+        return ai_engine
+    except Exception as e:
+        print(f"❌ Failed to load model '{model_id}': {e}")
+        return None
+
+
+def get_current_model() -> Optional[DeepfakeAI]:
+    """Get the currently selected model"""
+    return load_model(current_model_id)
 
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize AI model on server startup"""
-    global ai_engine
+    """Initialize default AI model on server startup"""
+    global current_model_id
     print("🚀 Initializing DeepScan AI Engine...")
+    print(f"📁 Models directory: {MODELS_DIR}")
+    print(f"📋 Available models: {list(MODELS_CONFIG.get('models', {}).keys())}")
     
-    # Step 1: Ensure model file exists (download if necessary)
-    if not download_model_if_not_exists(MODEL_PATH):
-        print("⚠️ Model not available. API will run in degraded mode.")
-        ai_engine = None
-        return
+    # Load default model
+    default_model = MODELS_CONFIG.get("default_model", "cnn_cifake")
+    current_model_id = default_model
     
-    # Step 2: Load the model
-    try:
-        ai_engine = DeepfakeAI(model_path=MODEL_PATH)
-        print(f"✅ Model loaded successfully on device: {ai_engine.device}")
-    except Exception as e:
-        print(f"❌ Failed to load model: {e}")
-        ai_engine = None
+    model = load_model(default_model)
+    if model:
+        print(f"✅ Default model '{default_model}' ready on device: {model.device}")
+    else:
+        print("⚠️ Default model not available. API will run in degraded mode.")
 
 
 # =============================================================================
@@ -186,6 +268,8 @@ class AnalysisResult(BaseModel):
     risk_level: str
     trust_score: str
     timestamp: str
+    model_used: str
+    model_id: str  # Add model_id for frontend
     model_used: str
     # Hybrid Analysis Scores
     final_score: Optional[float] = None  # Weighted combination score
@@ -204,6 +288,27 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     device: str
     version: str
+    current_model: str
+
+
+class ModelInfo(BaseModel):
+    """Response model for model info"""
+    id: str
+    name: str
+    description: str
+    architecture: str
+    accuracy: float
+    dataset: str
+    version: str
+    color: str
+    is_available: bool
+    is_current: bool
+
+
+class ModelsListResponse(BaseModel):
+    """Response model for models list"""
+    models: List[ModelInfo]
+    current_model: str
 
 
 # =============================================================================
@@ -457,41 +562,161 @@ def calculate_hybrid_analysis(
 @app.get("/", response_model=HealthResponse)
 async def root():
     """Health check endpoint"""
+    ai_engine = get_current_model()
+    model_info = MODELS_CONFIG.get("models", {}).get(current_model_id, {})
     return HealthResponse(
         status="online",
         model_loaded=ai_engine is not None,
         device=str(ai_engine.device) if ai_engine else "N/A",
-        version="2.0.0"
+        version="2.0.0",
+        current_model=model_info.get("name", "Unknown")
     )
 
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Detailed health check"""
+    ai_engine = get_current_model()
+    model_info = MODELS_CONFIG.get("models", {}).get(current_model_id, {})
     return HealthResponse(
         status="healthy" if ai_engine else "degraded",
         model_loaded=ai_engine is not None,
         device=str(ai_engine.device) if ai_engine else "N/A",
-        version="2.0.0"
+        version="2.0.0",
+        current_model=model_info.get("name", "Unknown")
     )
 
 
+# =============================================================================
+# MODEL MANAGEMENT ENDPOINTS
+# =============================================================================
+
+@app.get("/models", response_model=ModelsListResponse)
+async def list_models():
+    """
+    List all available models.
+    
+    Returns:
+        List of models with their info and availability status
+    """
+    models_list = []
+    
+    for model_id, info in MODELS_CONFIG.get("models", {}).items():
+        model_path = get_model_path(model_id)
+        is_available = model_path and os.path.exists(model_path)
+        
+        models_list.append(ModelInfo(
+            id=model_id,
+            name=info.get("name", model_id),
+            description=info.get("description", ""),
+            architecture=info.get("architecture", "Unknown"),
+            accuracy=info.get("accuracy", 0.0),
+            dataset=info.get("dataset", "Unknown"),
+            version=info.get("version", "1.0"),
+            color=info.get("color", "#3B82F6"),
+            is_available=is_available,
+            is_current=(model_id == current_model_id)
+        ))
+    
+    return ModelsListResponse(
+        models=models_list,
+        current_model=current_model_id
+    )
+
+
+@app.post("/models/{model_id}/select")
+async def select_model(model_id: str):
+    """
+    Select a model as the current active model.
+    
+    Args:
+        model_id: The ID of the model to select (e.g., 'cnn_cifake', 'combined_model')
+    
+    Returns:
+        Success message with selected model info
+    """
+    global current_model_id
+    
+    # Check if model exists in config
+    if model_id not in MODELS_CONFIG.get("models", {}):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Model '{model_id}' not found. Available: {list(MODELS_CONFIG.get('models', {}).keys())}"
+        )
+    
+    # Try to load the model
+    model = load_model(model_id)
+    if not model:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Model '{model_id}' could not be loaded. Check if the model file exists."
+        )
+    
+    # Update current model
+    current_model_id = model_id
+    model_info = MODELS_CONFIG.get("models", {}).get(model_id, {})
+    
+    print(f"✅ Switched to model: {model_id}")
+    
+    return JSONResponse({
+        "success": True,
+        "message": f"Model switched to '{model_info.get('name', model_id)}'",
+        "current_model": {
+            "id": model_id,
+            "name": model_info.get("name", model_id),
+            "accuracy": model_info.get("accuracy", 0.0),
+            "architecture": model_info.get("architecture", "Unknown")
+        }
+    })
+
+
+@app.get("/models/current")
+async def get_current_model_info():
+    """Get info about the currently selected model"""
+    model_info = MODELS_CONFIG.get("models", {}).get(current_model_id, {})
+    ai_engine = get_current_model()
+    
+    return JSONResponse({
+        "id": current_model_id,
+        "name": model_info.get("name", "Unknown"),
+        "description": model_info.get("description", ""),
+        "accuracy": model_info.get("accuracy", 0.0),
+        "dataset": model_info.get("dataset", "Unknown"),
+        "architecture": model_info.get("architecture", "Unknown"),
+        "version": model_info.get("version", "1.0"),
+        "color": model_info.get("color", "#3B82F6"),
+        "is_loaded": ai_engine is not None,
+        "device": str(ai_engine.device) if ai_engine else "N/A"
+    })
+
+
 @app.post("/analyze", response_model=AnalysisResult)
-async def analyze_image(file: UploadFile = File(...)):
+async def analyze_image(
+    file: UploadFile = File(...),
+    model_id: Optional[str] = Query(None, description="Model ID to use for analysis. If not provided, uses current model.")
+):
     """
     Analyze an image for deepfake detection.
     
     Args:
         file: Image file (JPG, PNG, WEBP)
+        model_id: Optional model ID to use (defaults to current model)
     
     Returns:
         AnalysisResult with prediction details
     """
+    global current_model_id
+    
+    # Use specified model or current model
+    use_model_id = model_id if model_id else current_model_id
+    ai_engine = load_model(use_model_id)
+    model_info = MODELS_CONFIG.get("models", {}).get(use_model_id, {})
+    
     # Validate AI engine is loaded
     if ai_engine is None:
         raise HTTPException(
             status_code=503,
-            detail="AI model not loaded. Please restart the server."
+            detail=f"AI model '{use_model_id}' not loaded. Please check if model file exists."
         )
     
     # Validate file type
@@ -551,7 +776,8 @@ async def analyze_image(file: UploadFile = File(...)):
             risk_level=risk_level,
             trust_score=trust_score,
             timestamp=datetime.now().isoformat(),
-            model_used="Hybrid CNN + Forensic Analysis",
+            model_used=model_info.get("name", "Unknown Model"),
+            model_id=use_model_id,
             # Hybrid analysis details
             final_score=round(final_score, 4),
             heatmap_score=round(heatmap_score, 4),
@@ -582,6 +808,9 @@ async def analyze_image_full(file: UploadFile = File(...)):
     Returns:
         JSON with prediction + visualization images as base64
     """
+    ai_engine = get_current_model()
+    model_info = MODELS_CONFIG.get("models", {}).get(current_model_id, {})
+    
     if ai_engine is None:
         raise HTTPException(
             status_code=503,
@@ -617,7 +846,8 @@ async def analyze_image_full(file: UploadFile = File(...)):
                 "risk_level": calculate_risk_level(is_real, confidence),
                 "trust_score": calculate_trust_score(confidence),
                 "timestamp": datetime.now().isoformat(),
-                "model_used": "CNN Custom (CIFAKE)"
+                "model_used": model_info.get("name", "Unknown"),
+                "model_id": current_model_id
             },
             "visualizations": {
                 "heatmap": numpy_to_base64(heatmap),
@@ -636,6 +866,7 @@ async def analyze_image_full(file: UploadFile = File(...)):
 @app.post("/heatmap")
 async def generate_heatmap(file: UploadFile = File(...)):
     """Generate heatmap visualization only"""
+    ai_engine = get_current_model()
     if ai_engine is None:
         raise HTTPException(status_code=503, detail="AI model not loaded.")
     
@@ -661,6 +892,7 @@ async def generate_fourier(file: UploadFile = File(...), mode: str = "magnitude"
         file: Image file
         mode: 'magnitude' or 'highpass'
     """
+    ai_engine = get_current_model()
     if ai_engine is None:
         raise HTTPException(status_code=503, detail="AI model not loaded.")
     
