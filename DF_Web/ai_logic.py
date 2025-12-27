@@ -78,7 +78,7 @@ class DeepfakeAI:
                 pass
         else:
             try:
-                state_dict = torch.load(path, map_location=self.device)
+                state_dict = torch.load(path, map_location=self.device, weights_only=False)
                 model.load_state_dict(state_dict)
                 print(f"✅ Đã nạp Model '{model_type}' thành công!")
             except Exception as e:
@@ -213,7 +213,7 @@ class DeepfakeAI:
         # MyNet: conv4 outputs feature maps of size 14x14 from 224x224 input
         # CombinedModel: use the last conv layer of EfficientNet (conv_branch.features)
         if self.model_type == 'CombinedModel':
-            target_layer = self.model.conv_branch.features[-1]
+            target_layer = self.model.conv_branchbranch[0][-1]  # Last conv layer in EfficientNet features
         else:
             target_layer = self.model.conv4
             
