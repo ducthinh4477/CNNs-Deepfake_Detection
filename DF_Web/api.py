@@ -57,7 +57,19 @@ def load_models_config() -> Dict:
                     "dataset": "CIFAKE",
                     "version": "1.0",
                     "color": "#10B981"
+                },
+                "combined_model": {
+                    "name": "Combined Model (EfficientNet)",
+                    "description": "Hybrid model with Frequency Analysis",
+                    "file": "best_model.pth",  
+                    "architecture": "CombinedModel",
+                    "input_size": [160, 160],
+                    "accuracy": 95.5,
+                    "dataset": "CIFAKE + FF++",
+                    "version": "2.0",
+                    "color": "#3B82F6"
                 }
+                # -------------------------------
             }
         }
 

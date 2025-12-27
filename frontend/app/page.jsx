@@ -73,10 +73,9 @@ function ModelSelector({ models, currentModel, onSelect, isLoading }) {
                 onSelect(model.id);
                 setIsOpen(false);
               }}
-              disabled={!model.is_available}
               className={`w-full px-3 py-2 text-left hover:bg-ds-primary/50 transition-colors flex items-center gap-2 ${
                 model.id === currentModel ? 'bg-ds-accent/20' : ''
-              } ${!model.is_available ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${!model.is_available ? 'opacity-75' : ''}`}
             >
               <div 
                 className="w-2 h-2 rounded-full flex-shrink-0" 
@@ -84,6 +83,8 @@ function ModelSelector({ models, currentModel, onSelect, isLoading }) {
               />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-ds-text truncate">{model.name}</p>
+                    {model.name} 
+                    {!model.is_available && " (Click to Download)"}
                 <p className="text-xs text-ds-text-muted">
                   {model.accuracy}% accuracy • {model.dataset}
                 </p>
