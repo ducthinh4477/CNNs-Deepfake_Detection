@@ -150,7 +150,7 @@ saved_model/
 
 # Model checkpoints directory
 checkpoints/
-models/
+# models/  <-- ĐÃ SỬA: Comment dòng này để Git nhận diện thư mục models
 weights/
 
 # Training logs
@@ -276,7 +276,9 @@ static/uploads/
 # ============================================================================
 
 # Keep the model config file (small JSON, needed for inference)
+!config.json
 !model_config.json
+!DF_Web/models/config.json
 
 # Keep requirements.txt
 !requirements.txt

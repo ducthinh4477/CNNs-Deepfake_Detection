@@ -1,0 +1,27 @@
+{
+  "default_model": "cnn_cifake",
+  "models": {
+    "cnn_cifake": {
+      "name": "CNN Custom (CIFAKE)",
+      "description": "Custom CNN trained on CIFAKE dataset for AI-generated image detection",
+      "file": "custom_cnn_cifake.pth",
+      "architecture": "MyNet",
+      "input_size": [224, 224],
+      "accuracy": 92.0,
+      "dataset": "CIFAKE",
+      "version": "1.0",
+      "color": "#10B981"
+    },
+    "combined_model": {
+      "name": "Combined Model (EfficientNet + FFT)",
+      "description": "EfficientNet-B0 combined with Frequency Analysis branch for enhanced detection",
+      "file": "best_model.pth",
+      "architecture": "CombinedModel",
+      "input_size": [160, 160],
+      "accuracy": 97.5,
+      "dataset": "DIRE",
+      "version": "2.0",
+      "color": "#8B5CF6"
+    }
+  }
+}
