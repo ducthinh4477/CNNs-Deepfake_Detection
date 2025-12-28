@@ -24,6 +24,34 @@ import {
 // API Base URL: Uses environment variable in production, localhost in development
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// Default models for Optimistic UI (prevents empty state during cold start)
+const DEFAULT_MODELS = [
+  {
+    id: 'cnn_cifake',
+    name: 'CNN Custom (CIFAKE)',
+    description: 'Custom CNN trained on CIFAKE dataset',
+    architecture: 'MyNet',
+    accuracy: 92.0,
+    dataset: 'CIFAKE',
+    version: '1.0',
+    color: '#10B981',
+    is_available: true,
+    is_current: true
+  },
+  {
+    id: 'combined_model',
+    name: 'Combined Model (EfficientNet + FFT)',
+    description: 'EfficientNet-B0 with Frequency Analysis',
+    architecture: 'CombinedModel',
+    accuracy: 97.5,
+    dataset: 'DIRE',
+    version: '2.0',
+    color: '#8B5CF6',
+    is_available: true,
+    is_current: false
+  }
+];
+
 // Model Selector Component
 function ModelSelector({ models, currentModel, onSelect, isLoading }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -208,34 +236,29 @@ export default function Home() {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
   
-  // Model selection state
-  const [models, setModels] = useState([]);
-  const [currentModel, setCurrentModel] = useState('');
+  // Model selection state (Optimistic UI - start with defaults)
+  const [models, setModels] = useState(DEFAULT_MODELS);
+  const [currentModel, setCurrentModel] = useState('cnn_cifake');
   const [isModelLoading, setIsModelLoading] = useState(false);
+  const [isServerReady, setIsServerReady] = useState(false);
 
-  // Fetch available models on mount
+  // Fetch available models on mount (updates defaults with server data)
   useEffect(() => {
     const fetchModels = async () => {
       try {
-        console.log('🔍 Fetching models from:', `${API_BASE}/models`);
-        const response = await axios.get(`${API_BASE}/models`);
-        console.log('✅ Models fetched:', response.data);
+        console.log('🔍 Connecting to AI Server:', `${API_BASE}/models`);
+        const response = await axios.get(`${API_BASE}/models`, {
+          timeout: 120000, // 2 minute timeout for cold start
+        });
+        console.log('✅ Server connected! Models fetched:', response.data);
         setModels(response.data.models);
         setCurrentModel(response.data.current_model);
+        setIsServerReady(true);
       } catch (err) {
         console.error('❌ Failed to fetch models:', err);
         console.error('API Base:', API_BASE);
-        // Set default fallback
-        setModels([{
-          id: 'cnn_cifake',
-          name: 'CNN Custom (CIFAKE)',
-          accuracy: 92.0,
-          dataset: 'CIFAKE',
-          color: '#10B981',
-          is_available: true,
-          is_current: true
-        }]);
-        setCurrentModel('cnn_cifake');
+        // Keep using DEFAULT_MODELS (already set in initial state)
+        // Don't set isServerReady to true - server is not responding
       }
     };
     fetchModels();
@@ -459,6 +482,22 @@ export default function Home() {
               <Cpu className="w-4 h-4" />
               Select Model
             </h2>
+            
+            {/* Server Connection Status Indicator */}
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${
+              isServerReady 
+                ? 'bg-ds-success/10 border border-ds-success/30' 
+                : 'bg-yellow-500/10 border border-yellow-500/30'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                isServerReady 
+                  ? 'bg-ds-success' 
+                  : 'bg-yellow-500 animate-pulse'
+              }`} />
+              <span className={isServerReady ? 'text-ds-success' : 'text-yellow-500'}>
+                {isServerReady ? 'AI Server Ready' : 'Connecting to AI Server...'}
+              </span>
+            </div>
             
             {/* Model Selector Dropdown - with explicit positioning */}
             <div className="relative overflow-visible">
