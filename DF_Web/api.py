@@ -262,21 +262,53 @@ def get_current_model() -> Optional[DeepfakeAI]:
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize default AI model on server startup"""
+    """Initialize ALL AI models on server startup (Eager Loading)"""
     global current_model_id
     print("🚀 Initializing DeepScan AI Engine...")
     print(f"📁 Models directory: {MODELS_DIR}")
-    print(f"📋 Available models: {list(MODELS_CONFIG.get('models', {}).keys())}")
     
-    # Load default model
+    all_model_ids = list(MODELS_CONFIG.get("models", {}).keys())
+    print(f"📋 Available models: {all_model_ids}")
+    
+    # Set default model as current
     default_model = MODELS_CONFIG.get("default_model", "cnn_cifake")
     current_model_id = default_model
     
-    model = load_model(default_model)
-    if model:
-        print(f"✅ Default model '{default_model}' ready on device: {model.device}")
+    # Eager Loading: Load ALL models at startup
+    print("=" * 50)
+    print("📦 EAGER LOADING: Pre-loading all models...")
+    print("=" * 50)
+    
+    success_count = 0
+    fail_count = 0
+    
+    for model_id in all_model_ids:
+        model_info = MODELS_CONFIG.get("models", {}).get(model_id, {})
+        model_name = model_info.get("name", model_id)
+        print(f"\n🔄 Loading model: {model_name} ({model_id})...")
+        
+        model = load_model(model_id)
+        if model:
+            print(f"   ✅ SUCCESS: '{model_name}' loaded on device: {model.device}")
+            success_count += 1
+        else:
+            print(f"   ❌ FAILED: Could not load '{model_name}'")
+            fail_count += 1
+    
+    # Summary
+    print("\n" + "=" * 50)
+    print(f"📊 EAGER LOADING COMPLETE")
+    print(f"   ✅ Loaded: {success_count}/{len(all_model_ids)} models")
+    if fail_count > 0:
+        print(f"   ❌ Failed: {fail_count}/{len(all_model_ids)} models")
+    print(f"   🎯 Current model: {current_model_id}")
+    print("=" * 50)
+    
+    # Check if default model is available
+    if current_model_id in loaded_models:
+        print(f"\n✅ Default model '{current_model_id}' ready for inference!")
     else:
-        print("⚠️ Default model not available. API will run in degraded mode.")
+        print(f"\n⚠️ Default model '{current_model_id}' not available. API will run in degraded mode.")
 
 
 # =============================================================================

@@ -213,7 +213,7 @@ class DeepfakeAI:
         # MyNet: conv4 outputs feature maps of size 14x14 from 224x224 input
         # CombinedModel: use the last conv layer of EfficientNet (conv_branch.features)
         if self.model_type == 'CombinedModel':
-            target_layer = self.model.conv_branchbranch[0][-1]  # Last conv layer in EfficientNet features
+            target_layer = self.model.conv_branch[0][-1]  # Last conv layer in EfficientNet features
         else:
             target_layer = self.model.conv4
             
